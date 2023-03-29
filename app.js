@@ -1,88 +1,154 @@
-/*Game Function
- -Player must guess a number between min and max.
- -Player gets a certian amount of guesses.
- -Notify the player of guesses remaining.
- -Notify the player of correct answer if loose.
- -Let player choose to play again.
- */
-console.log('let the game begin...');
-//Game Values
-let min = 1,
-  max = 10,
-  winningNum = getRandomNum(min,max),
-  guessesLeft = 3;
+//Define UI variables
+const form = document.querySelector('#task-form');
+const taskList = document.querySelector('.collection');
+const clearBtn = document.querySelector('.clear-tasks');
+const filter = document.querySelector('#filter');
+const taskInput = document.querySelector('#task');
 
-//UI Elements
-const game = document.querySelector('#game'),
-  minNum = document.querySelector('.min-num'),
-  maxNum = document.querySelector('.max-num'),
-  guessBtn = document.querySelector('#guess-btn'),
-  guessInput = document.querySelector('#guess-input'),
-  message = document.querySelector('.message');
+//load all the event listners
+loadEventListners();
 
-//Assign UI min and max
-minNum.textContent = min;
-maxNum.textContent = max;
-//play agian event listener
-game.addEventListener('mousedown', function (e) {
-  if (e.target.className === 'play-again') {
-     window.location.reload();
+//load all the event listners
+//DOM Load event
+document.addEventListener('DOMContentLoaded', getTasks);
+function loadEventListners() {
+  //Add task event
+  form.addEventListener('submit', addTask);
+  //remove task event
+  taskList.addEventListener('click', removeTask);
+  // clear task event
+  clearBtn.addEventListener('click', clearTasks);
+  // filter task event
+  filter.addEventListener('keyup', filterTasks);
+}
+// get tasks from local storage
+function getTasks() {
+  let tasks;
+  if (localStorage.getItem('tasks') === null) {
+    tasks = [];
+  } else {
+    tasks = JSON.parse(localStorage.getItem('tasks'));
   }
- 
-})
+  tasks.forEach(function (task) {
+    //creat li element
+  const li = document.createElement('li');
+  //add Class
+  li.className = 'collection-item';
+  //create text node and append to the li's
+  li.appendChild(document.createTextNode(task));
+  //create new link element
+  const link = document.createElement('a');
+  //add class name
+  link.className = 'delete-item secondary-content';
 
-//event listner
-guessBtn.addEventListener('click', function () {
-  let guess = parseInt(guessInput.value);
-//validate
-  if (isNaN(guess) || guess < min || guess > max) {
-    setMessage(`Please enter a number between ${min} and ${max}`, 'red');
+  link.innerHTML = '<i class="fa fa-remove"></i>';
+  //append link to the li
+  li.appendChild(link);
+  //append li to the ul
+  taskList.appendChild(li);
+  })
+}  
+// add task
+function addTask(e) {
+  if (taskInput.value === '') {
+    alert("Add a Task"); 
+    //console.log('hello')
   }
-//check if won
-  if (guess === winningNum) {
-   gameOver(true,`${winningNum} is correct, YOU WIN!`)
+  //creat li element
+  const li = document.createElement('li');
+  //add Class
+  li.className = 'collection-item';
+  //create text node and append to the li's
+  li.appendChild(document.createTextNode(taskInput.value));
+  //create new link element
+  const link = document.createElement('a');
+  //add class name
+  link.className = 'delete-item secondary-content';
+
+  link.innerHTML = '<i class="fa fa-remove"></i>';
+  //append link to the li
+  li.appendChild(link);
+  //append li to the ul
+  taskList.appendChild(li);
+
+  // store in local storage
+  storeTaskInLocalStorage(taskInput.value);
+
+  //clear the input
+  taskInput.value = '';
+  e.preventDefault();
+}
+
+//store task
+function storeTaskInLocalStorage(task) {
+  let tasks;
+  if (localStorage.getItem('tasks') === null) {
+    tasks = [];
     
   } else {
-    //guessesLeft
-    guessesLeft -= 1;
-
-    if (guessesLeft === 0) {
-     gameOver(false,`your guess is incorrect, You lost! the correct number is ${winningNum}.`)
-    } else {
-      //wrong guess
-      // set border color to red
-    guessInput.style.borderColor = 'red';
-    // show  message
-    setMessage(`${guess} is incorrect,${guessesLeft} guesses left.`, 'red');
+    tasks = JSON.parse(localStorage.getItem('tasks'));
+  }
+  tasks.push(task);
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+//add removeTask function
+function removeTask(e) {
+  if (e.target.parentElement.classList.contains('delete-item')) {
+    if (confirm('Are you sure?')) {
+      e.target.parentElement.parentElement.remove(); 
+      
+      // remove from local storage
+      removeTaskFromLcoalStorage(e.target.parentElement.parentElement);
     }
     
+  } 
+}
+
+// remove from LS
+function removeTaskFromLcoalStorage(taskItem) {
+   let tasks;
+  if (localStorage.getItem('tasks') === null) {
+    tasks = [];
+  } else {
+    tasks = JSON.parse(localStorage.getItem('tasks'));
   }
-})
+  tasks.forEach(function (task, index) {
+    if (taskItem.textContent === task) {
+      tasks.splice(index, 1);
+    }
+  })
+  localStorage.setItem('tasks',JSON.stringify(tasks));
+}
+// add clearTask function
+function clearTasks(e) {
+  //taskList.innerHTML = '';
+
+  //faster
+  while (taskList.firstChild) {
+    taskList.removeChild(taskList.firstChild);
+  }
+  // clear tasks from LS
+  clearTasksFromLocalStorage();
+}
+//clear tasks from LS
+function clearTasksFromLocalStorage() {
+  confirm('Are you sure?');
+  localStorage.clear();
+}
+// add filterTasks function 
+function filterTasks(e) {
+  const text = e.target.value.toLowerCase();
+  document.querySelectorAll('.collection-item').forEach(function (task) {
+    const item = task.firstChild.textContent;
+    if (item.toLowerCase().indexOf(text) != -1) {
+      task.style.display = 'block';
+      
+    } else {
+      task.style.display = 'none';
+      
+    }
+  });
+
+  console.log(text);
+}
     
-// create function setMessage
-function setMessage(msg, color) {
-  message.textContent = msg;
-  message.style.color = color;
-}
-//gameOver function
-function gameOver(won, msg) {
-  let color;
-  won === true ? color = 'green' : color = 'red';
-  //disable the input
-  guessInput.disabled = true;
-  //set input bordercolor and message color
-  guessInput.style.borderColor = color;
-  message.style.color = color;
-  //set message
-  setMessage(msg);
-
-  //play again
-  guessBtn.value = 'Play Again';
-  //class name
-  guessBtn.className += 'play-again';
-}
-// function getRandomNum
-function getRandomNum(min, max) {
-  return (Math.floor(Math.random() * (max - min + 1) + min));
-}
-
