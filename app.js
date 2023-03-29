@@ -1,154 +1,167 @@
-//Define UI variables
-const form = document.querySelector('#task-form');
-const taskList = document.querySelector('.collection');
-const clearBtn = document.querySelector('.clear-tasks');
-const filter = document.querySelector('#filter');
-const taskInput = document.querySelector('#task');
-
-//load all the event listners
-loadEventListners();
-
-//load all the event listners
-//DOM Load event
-document.addEventListener('DOMContentLoaded', getTasks);
-function loadEventListners() {
-  //Add task event
-  form.addEventListener('submit', addTask);
-  //remove task event
-  taskList.addEventListener('click', removeTask);
-  // clear task event
-  clearBtn.addEventListener('click', clearTasks);
-  // filter task event
-  filter.addEventListener('keyup', filterTasks);
+//Book Constructor
+function Book(title,author,isbn){
+  this.title = title;
+  this.author = author;
+  this.isbn = isbn;
 }
-// get tasks from local storage
-function getTasks() {
-  let tasks;
-  if (localStorage.getItem('tasks') === null) {
-    tasks = [];
-  } else {
-    tasks = JSON.parse(localStorage.getItem('tasks'));
+
+
+//UI constructor
+function UI() { }
+
+//Store constuctor
+function Store(){ }
+
+UI.prototype.addBookToList = function (book) {
+  const list = document.getElementById('book-list');
+  //create tr element
+  const row = document.createElement('tr');
+  //inset cols
+  row.innerHTML = `
+  <td>${book.title}</td>
+  <td>${book.author}</td>
+  <td>${book.isbn}</td>
+  <td><a href='#' class='delete'>X</a></td>`;
+  list.appendChild(row);
+
+}
+//clear fields
+UI.prototype.clearFields=function(){
+  document.getElementById('title').value = '';
+  document.getElementById('author').value = '';
+  document.getElementById('isbn').value = '';
+  
+}
+
+//UI delete book from the list
+UI.prototype.deleteBook = function (target) {
+  if (target.className === 'delete') {
+    target.parentElement.parentElement.remove();
   }
-  tasks.forEach(function (task) {
-    //creat li element
-  const li = document.createElement('li');
-  //add Class
-  li.className = 'collection-item';
-  //create text node and append to the li's
-  li.appendChild(document.createTextNode(task));
-  //create new link element
-  const link = document.createElement('a');
+}
+
+
+UI.prototype.showAlert = function (message, className) {
+  //create div
+  const div=document.createElement('div');
   //add class name
-  link.className = 'delete-item secondary-content';
-
-  link.innerHTML = '<i class="fa fa-remove"></i>';
-  //append link to the li
-  li.appendChild(link);
-  //append li to the ul
-  taskList.appendChild(li);
-  })
-}  
-// add task
-function addTask(e) {
-  if (taskInput.value === '') {
-    alert("Add a Task"); 
-    //console.log('hello')
-  }
-  //creat li element
-  const li = document.createElement('li');
-  //add Class
-  li.className = 'collection-item';
-  //create text node and append to the li's
-  li.appendChild(document.createTextNode(taskInput.value));
-  //create new link element
-  const link = document.createElement('a');
-  //add class name
-  link.className = 'delete-item secondary-content';
-
-  link.innerHTML = '<i class="fa fa-remove"></i>';
-  //append link to the li
-  li.appendChild(link);
-  //append li to the ul
-  taskList.appendChild(li);
-
-  // store in local storage
-  storeTaskInLocalStorage(taskInput.value);
-
-  //clear the input
-  taskInput.value = '';
-  e.preventDefault();
-}
-
-//store task
-function storeTaskInLocalStorage(task) {
-  let tasks;
-  if (localStorage.getItem('tasks') === null) {
-    tasks = [];
+  div.className = `alert ${className}`;
+  //create text node
+  div.appendChild(document.createTextNode(message));
+  //get parent
+  const container = document.querySelector('.container');
+  //get form
+  const form = document.querySelector('#book-form');
+  container.insertBefore(div, form);
+  
+  //set timeout
+  setTimeout(function () {
+    document.querySelector('.alert').remove();
     
-  } else {
-    tasks = JSON.parse(localStorage.getItem('tasks'));
-  }
-  tasks.push(task);
-  localStorage.setItem('tasks', JSON.stringify(tasks));
+  }, 3000);
+  
 }
-//add removeTask function
-function removeTask(e) {
-  if (e.target.parentElement.classList.contains('delete-item')) {
-    if (confirm('Are you sure?')) {
-      e.target.parentElement.parentElement.remove(); 
-      
-      // remove from local storage
-      removeTaskFromLcoalStorage(e.target.parentElement.parentElement);
-    }
-    
-  } 
-}
-
-// remove from LS
-function removeTaskFromLcoalStorage(taskItem) {
-   let tasks;
-  if (localStorage.getItem('tasks') === null) {
-    tasks = [];
-  } else {
-    tasks = JSON.parse(localStorage.getItem('tasks'));
-  }
-  tasks.forEach(function (task, index) {
-    if (taskItem.textContent === task) {
-      tasks.splice(index, 1);
-    }
-  })
-  localStorage.setItem('tasks',JSON.stringify(tasks));
-}
-// add clearTask function
-function clearTasks(e) {
-  //taskList.innerHTML = '';
-
-  //faster
-  while (taskList.firstChild) {
-    taskList.removeChild(taskList.firstChild);
-  }
-  // clear tasks from LS
-  clearTasksFromLocalStorage();
-}
-//clear tasks from LS
-function clearTasksFromLocalStorage() {
-  confirm('Are you sure?');
-  localStorage.clear();
-}
-// add filterTasks function 
-function filterTasks(e) {
-  const text = e.target.value.toLowerCase();
-  document.querySelectorAll('.collection-item').forEach(function (task) {
-    const item = task.firstChild.textContent;
-    if (item.toLowerCase().indexOf(text) != -1) {
-      task.style.display = 'block';
-      
+//Local storage getBooks
+Store.prototype.getBooks = function () {
+  let books;
+    if (localStorage.getItem('books') === null) {
+      books = [];
     } else {
-      task.style.display = 'none';
-      
+      books = JSON.parse(localStorage.getItem('books'));
     }
-  });
-
-  console.log(text);
+    return books;
+} 
+//local storage addBook
+Store.prototype.addBook = function (book) {
+   const store = new Store();
+  const books = store.getBooks();
+  books.push(book);
+  localStorage.setItem('books', JSON.stringify(books));
 }
+
+//local storage displayBooks
+Store.prototype.displayBooks = function () {
+   const store = new Store();
+  const books = store.getBooks();
+  books.forEach(function(book){
+  //instantiate UI
+  const ui = new UI;
+  //add book
+  ui.addBookToList(book);
+      
+    });
+}
+
+//local storage removeBook
+Store.prototype.removeBook = function (isbn) {
+  const store = new Store();
+  const books = store.getBooks();
+    books.forEach(function(book,index){
+      if (book.isbn === isbn) {
+        books.splice(index, 1);
+    } 
+    });
+    localStorage.setItem('books', JSON.stringify(books)); 
+}
+
+//DOMload event
+const store = new Store();
+document.addEventListener('DOMContentLoaded', store.displayBooks);
+
+//event listener for adding book
+document.getElementById('book-form').addEventListener('submit', function (e) {
+  //console.log('test');
+  //Get form values
+  const title = document.getElementById('title').value;
+  const author = document.getElementById('author').value;
+  const isbn = document.getElementById('isbn').value;
+  //console.log(title, author, isbn);
+  //instantiate book constructor
+  const book = new Book(title, author, isbn);
+  //console.log(book);
+
+  //instantiate UI constructor
+  const ui = new UI();
+
+  if (title == '' || author == '' || isbn == '') {
+    ui.showAlert('please fill all the fields', 'error');
+  } else {
+  // add book to the list
+    ui.addBookToList(book);
     
+    //add to local storage
+    const store = new Store();
+    store.addBook(book);
+
+  // show success message
+    ui.showAlert('Book added!', 'success');  
+    
+  //clear fields
+  ui.clearFields();
+    
+}
+
+ 
+
+  e.preventDefault();
+})
+
+//DOMload event
+document.addEventListener('DOMContentLoaded', Store.displayBooks);
+
+//EVENT listner for delete
+document.getElementById('book-list').addEventListener('click', function(e){
+  
+
+  //instantiate UI constructor
+  const ui = new UI();
+  ui.deleteBook(e.target);
+
+  //remove from ls
+  const store = new Store();
+  store.removeBook(e.target.parentElement.previousElementSibling.textContent);
+
+  //show alert
+  ui.showAlert('Book removed!', 'success');
+  e.preventDefault();
+})
