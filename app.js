@@ -1,71 +1,88 @@
-// Listen for Submit
-document.getElementById('loan-form').addEventListener('submit', function (e) {
-  //hide results
-  document.getElementById('results').style.display = 'none';
-  //show results
-  document.getElementById('loading').style.display = 'block';
-  //set time
-  setTimeout(calculateResults, 2000);
+/*Game Function
+ -Player must guess a number between min and max.
+ -Player gets a certian amount of guesses.
+ -Notify the player of guesses remaining.
+ -Notify the player of correct answer if loose.
+ -Let player choose to play again.
+ */
+console.log('let the game begin...');
+//Game Values
+let min = 1,
+  max = 10,
+  winningNum = getRandomNum(min,max),
+  guessesLeft = 3;
 
-  e.preventDefault();
-});
-//add fuction calculateResults
-function calculateResults() {
-  console.log('calculating..');
-  //UI vars
-  const amount = document.getElementById('amount');
-  const interest = document.getElementById('interest');
-  const years = document.getElementById('years');
-  const monthlyPayments = document.getElementById('monthly-payment');
-  const totalPayment = document.getElementById('total-payment');
-  const totalInterest = document.getElementById('total-interest');
+//UI Elements
+const game = document.querySelector('#game'),
+  minNum = document.querySelector('.min-num'),
+  maxNum = document.querySelector('.max-num'),
+  guessBtn = document.querySelector('#guess-btn'),
+  guessInput = document.querySelector('#guess-input'),
+  message = document.querySelector('.message');
 
-  const principal = parseFloat(amount.value);
-  const calculatedInterest = parseFloat(interest.value) / 100 / 12;
-  const calculatedPayments = parseFloat(years.value) * 12;
-
-  //compute monthly payments
-  const x = Math.pow(1 + calculatedInterest, calculatedPayments);
-  const monthly = (principal * x * calculatedInterest) / (x - 1);
-  if (isFinite(monthly)) {
-    console.log('enter if...')
-    monthlyPayments.value = monthly.toFixed(2);
-    totalPayment.value = (monthly * calculatedPayments).toFixed(2);
-    totalInterest.value = ((monthly * calculatedPayments) - principal).toFixed(2);
-    //hide loader
-    document.getElementById('loading').style.display = 'none';
-    //show result
-    document.getElementById('results').style.display = 'block';
-    
-  } else {
-    showError('please check your numbers');
+//Assign UI min and max
+minNum.textContent = min;
+maxNum.textContent = max;
+//play agian event listener
+game.addEventListener('mousedown', function (e) {
+  if (e.target.className === 'play-again') {
+     window.location.reload();
   }
  
-}
-// funciton showErrors
-function showError(error) {
-   //hide loader
-    document.getElementById('loading').style.display = 'none';
-    //hide result
-    document.getElementById('results').style.display = 'none';
-//create Div
-  const errorDiv = document.createElement('div');
-  //get elements
-  const card = document.querySelector('.card');
-  const heading = document.querySelector('.heading');
-  //Add class
-  errorDiv.className = 'alert alert-danger';
-  // create textNode and append to div
-  errorDiv.appendChild(document.createTextNode(error));
-  //insert error before heading
-  card.insertBefore(errorDiv, heading);
+})
 
-  //clear error after 3 seconds
-  setTimeout(clearError, 3000);
+//event listner
+guessBtn.addEventListener('click', function () {
+  let guess = parseInt(guessInput.value);
+//validate
+  if (isNaN(guess) || guess < min || guess > max) {
+    setMessage(`Please enter a number between ${min} and ${max}`, 'red');
+  }
+//check if won
+  if (guess === winningNum) {
+   gameOver(true,`${winningNum} is correct, YOU WIN!`)
+    
+  } else {
+    //guessesLeft
+    guessesLeft -= 1;
 
+    if (guessesLeft === 0) {
+     gameOver(false,`your guess is incorrect, You lost! the correct number is ${winningNum}.`)
+    } else {
+      //wrong guess
+      // set border color to red
+    guessInput.style.borderColor = 'red';
+    // show  message
+    setMessage(`${guess} is incorrect,${guessesLeft} guesses left.`, 'red');
+    }
+    
+  }
+})
+    
+// create function setMessage
+function setMessage(msg, color) {
+  message.textContent = msg;
+  message.style.color = color;
+}
+//gameOver function
+function gameOver(won, msg) {
+  let color;
+  won === true ? color = 'green' : color = 'red';
+  //disable the input
+  guessInput.disabled = true;
+  //set input bordercolor and message color
+  guessInput.style.borderColor = color;
+  message.style.color = color;
+  //set message
+  setMessage(msg);
 
+  //play again
+  guessBtn.value = 'Play Again';
+  //class name
+  guessBtn.className += 'play-again';
 }
-// create function clearError
-function clearError() {
-  document.querySelector(".alert").remove();
+// function getRandomNum
+function getRandomNum(min, max) {
+  return (Math.floor(Math.random() * (max - min + 1) + min));
 }
+
